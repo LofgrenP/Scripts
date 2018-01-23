@@ -1,0 +1,28 @@
+<xml>
+<networkrange>
+	<name>Primary</name>
+	<Subnet>172.22.1</Subnet>
+	<Gateway>172.22.1.254</Gateway>
+    <Length>24</Length>
+	<DNSPri>172.22.1.10</DNSPri>
+	<DNSSec>172.22.1.11</DNSSec>
+</networkrange>
+<networkrange>
+	<name>Secondary</name>
+	<Subnet>172.22.2</Subnet>
+	<Gateway></Gateway>
+    <Length>24</Length>
+	<DNSPri>172.22.1.10</DNSPri>
+	<DNSSec>172.22.1.11</DNSSec>
+</networkrange>
+<networkrange>
+	<name>Third</name>
+	<Subnet>172.22.203</Subnet>
+	<Gateway></Gateway>
+    <Length>24</Length>
+	<DNSPri>172.22.1.10</DNSPri>
+	<DNSSec>172.22.1.11</DNSSec>
+</networkrange>
+<Computer name="NETWORK01" ip="1" />
+<Computer name="mor-ss002" ip="2" />
+</xml>
