@@ -47,7 +47,8 @@ SOFTWARE.
     Version history:
     1.0.0 - (2017-12-28) Script created
     1.0.1 - (2018-01-12) Bugfix for ipranges starting with same number.
-    1.1.0 - (2018-02-23) Added task sequence integration and ConfigMgr Logging.
+    1.1.0 - (2018-01-23) Added task sequence integration and ConfigMgr Logging.
+    1.2.0 - (2018-01-29) Fixed unhandled error in clearing gateway
 
 #>
 
@@ -159,7 +160,7 @@ Process {
                 #Clear current configuration
                 Remove-NetIPAddress -InterfaceIndex $NetAdapter.InterfaceIndex -Confirm:$false
                 try {
-                    Remove-NetRoute -InterfaceIndex $NetAdapter.InterfaceIndex -DestinationPrefix 0.0.0.0/0 -Confirm:$false -ErrorAction Stop
+                    $ClearGateway = Remove-NetRoute -InterfaceIndex $NetAdapter.InterfaceIndex -DestinationPrefix 0.0.0.0/0 -Confirm:$false -ErrorAction Stop
                 }
                 catch {
                     Write-Output "$SCRIPTNAME - No Gateway found, clear unneded"
