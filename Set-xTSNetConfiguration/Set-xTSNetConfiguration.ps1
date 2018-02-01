@@ -49,6 +49,7 @@ SOFTWARE.
     1.0.1 - (2018-01-12) Bugfix for ipranges starting with same number.
     1.1.0 - (2018-01-23) Added task sequence integration and ConfigMgr Logging.
     1.2.0 - (2018-01-29) Fixed unhandled error in clearing gateway
+    1.3.0 - (2018-02-01) Added features to disable IPv6
 
 #>
 
@@ -170,12 +171,18 @@ Process {
                     Write-Output "$SCRIPTNAME - Seting IP without Default Gateway"
                     New-NetIPAddress -IPAddress "$($NetworkRange.Subnet + "." + $LastIP)" -InterfaceIndex $NetAdapter.InterfaceIndex -PrefixLength $NetworkRange.Length | Out-Null
                     Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
+                    if ($NetworkRange.DisableIPv6 -eq "True") {
+                        Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
+                    }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
                 Else {
                     Write-Output "$SCRIPTNAME - Setting IP with Default Gateway"
                     New-NetIPAddress -IPAddress "$($NetworkRange.Subnet + "." + $LastIP)" -DefaultGateway $NetworkRange.Gateway -InterfaceIndex $NetAdapter.InterfaceIndex -PrefixLength $NetworkRange.Length | Out-Null
                     Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
+                    if ($NetworkRange.DisableIPv6 -eq "True") {
+                        Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
+                    }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
             }

@@ -6,6 +6,7 @@
     <Length>24</Length>
 	<DNSPri>172.22.1.10</DNSPri>
 	<DNSSec>172.22.1.11</DNSSec>
+    <DisableIPv6>True</DisableIPv6>
 </networkrange>
 <networkrange>
 	<name>Secondary</name>
@@ -14,6 +15,7 @@
     <Length>24</Length>
 	<DNSPri>172.22.1.10</DNSPri>
 	<DNSSec>172.22.1.11</DNSSec>
+    <DisableIPv6>False</DisableIPv6>
 </networkrange>
 <networkrange>
 	<name>Third</name>
@@ -22,6 +24,7 @@
     <Length>24</Length>
 	<DNSPri>172.22.1.10</DNSPri>
 	<DNSSec>172.22.1.11</DNSSec>
+    <DisableIPv6>False</DisableIPv6>
 </networkrange>
 <Computer name="NETWORK01" ip="1" />
 <Computer name="mor-ss002" ip="2" />
