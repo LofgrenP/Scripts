@@ -26,6 +26,6 @@
 	<DNSSec>172.22.1.11</DNSSec>
     <DisableIPv6>False</DisableIPv6>
 </networkrange>
-<Computer name="NETWORK01" ip="1" />
-<Computer name="mor-ss002" ip="2" />
+<Computer name="PC01" IP="1" />
+<Computer name="PC02" IP="2" />
 </xml>
