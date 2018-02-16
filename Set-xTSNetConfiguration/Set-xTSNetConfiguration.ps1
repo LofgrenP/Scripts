@@ -50,6 +50,8 @@ SOFTWARE.
     1.1.0 - (2018-01-23) Added task sequence integration and ConfigMgr Logging.
     1.2.0 - (2018-01-29) Fixed unhandled error in clearing gateway
     1.3.0 - (2018-02-01) Added features to disable IPv6
+    1.4.0 - (2018-02-16) Added network metric cabailites
+    1.5.0 - (2018-02-16) Added options to disable dns registration
 
 #>
 
@@ -149,7 +151,7 @@ Process {
     Foreach ($NetworkRange in $XMLContent.xml.networkrange) {
         Write-Output "$SCRIPTNAME - Working on range: $($NetworkRange.name)"
         #Check each network rang in the xml file
-            Foreach ($NetAdapter in $(Get-NetAdapter -Physical)) {    
+            Foreach ($NetAdapter in $(Get-NetAdapter -Physical)) {
             Write-Output "$SCRIPTNAME - Working on Adapter: $($NetAdapter.Name)"
             $IpAddress = $NetAdapter | Get-NetIPAddress -AddressFamily IPv4 | Select-Object -Unique
             #Match current network address with range in xmlfile
@@ -174,6 +176,12 @@ Process {
                     if ($NetworkRange.DisableIPv6 -eq "True") {
                         Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
                     }
+                    if ($NetworkRange.NetworkMetric -ne 0) {
+                        Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -InterfaceMetric $NetworkRange.NetworkMetric
+                    }
+                    if ( $NetworkRange.RegisterInDNS -eq "False") {
+                        Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
+                    }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
                 Else {
@@ -182,6 +190,12 @@ Process {
                     Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
                     if ($NetworkRange.DisableIPv6 -eq "True") {
                         Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
+                    }
+                    if ($NetworkRange.NetworkMetric -ne 0) {
+                        Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -InterfaceMetric $NetworkRange.NetworkMetric
+                    }
+                    if ( $NetworkRange.RegisterInDNS -eq "False") {
+                        Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
                     }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }

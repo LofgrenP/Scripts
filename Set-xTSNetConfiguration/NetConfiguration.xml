@@ -1,4 +1,4 @@
-<xml>
+<xml version="1.5">
 <networkrange>
 	<name>Primary</name>
 	<Subnet>172.22.1</Subnet>
@@ -7,6 +7,8 @@
 	<DNSPri>172.22.1.10</DNSPri>
 	<DNSSec>172.22.1.11</DNSSec>
     <DisableIPv6>True</DisableIPv6>
+    <RegisterInDNS>True</RegisterInDNS>
+    <NetworkMetric>1</NetworkMetric>
 </networkrange>
 <networkrange>
 	<name>Secondary</name>
@@ -16,6 +18,8 @@
 	<DNSPri>172.22.1.10</DNSPri>
 	<DNSSec>172.22.1.11</DNSSec>
     <DisableIPv6>False</DisableIPv6>
+    <RegisterInDNS>True</RegisterInDNS>
+    <NetworkMetric>2</NetworkMetric>
 </networkrange>
 <networkrange>
 	<name>Third</name>
@@ -25,6 +29,8 @@
 	<DNSPri>172.22.1.10</DNSPri>
 	<DNSSec>172.22.1.11</DNSSec>
     <DisableIPv6>False</DisableIPv6>
+    <RegisterInDNS>True</RegisterInDNS>
+    <NetworkMetric>3</NetworkMetric>
 </networkrange>
 <Computer name="PC01" IP="1" />
 <Computer name="PC02" IP="2" />
