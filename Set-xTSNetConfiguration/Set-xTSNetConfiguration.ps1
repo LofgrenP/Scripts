@@ -52,6 +52,7 @@ SOFTWARE.
     1.3.0 - (2018-02-01) Added features to disable IPv6
     1.4.0 - (2018-02-16) Added network metric cabailites
     1.5.0 - (2018-02-16) Added options to disable dns registration
+    1.5.1 - (2018-02-20) Added option to reenable dns registration and metric
 
 #>
 
@@ -179,8 +180,14 @@ Process {
                     if ($NetworkRange.NetworkMetric -ne 0) {
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -InterfaceMetric $NetworkRange.NetworkMetric
                     }
+                    If ($NetworkRange.NetworkMetrix -eq 0) {
+                        Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
+                    }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
+                    }
+                    if ( $NetworkRange.RegisterInDNS -eq "True") {
+                        Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
@@ -194,8 +201,14 @@ Process {
                     if ($NetworkRange.NetworkMetric -ne 0) {
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -InterfaceMetric $NetworkRange.NetworkMetric
                     }
+                    If ($NetworkRange.NetworkMetrix -eq 0) {
+                        Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
+                    }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
+                    }
+                    if ( $NetworkRange.RegisterInDNS -eq "True") {
+                        Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
