@@ -42,7 +42,7 @@ SOFTWARE.
     Author:      Peter Löfgren
     Contact:     @LofgrenPeter
     Created:     2017-12-28
-    Updated:     2018-01-12
+    Updated:     2018-04-16
 	
     Version history:
     1.0.0 - (2017-12-28) Script created
@@ -53,6 +53,8 @@ SOFTWARE.
     1.4.0 - (2018-02-16) Added network metric cabailites
     1.5.0 - (2018-02-16) Added options to disable dns registration
     1.5.1 - (2018-02-20) Added option to reenable dns registration and metric
+    1.5.2 - (2018-04-16) Added option to enable/disable netbios
+    1.5.3 - (2018-04-16) Added XML Version check
 
 #>
 
@@ -136,6 +138,12 @@ Process {
 
     [xml]$XMLContent = Get-Content -Path $Path
 
+    #Verfiy XML Version
+    if ($XMLContent.xml.version -ne "1.6") {
+        Write-Warning "XML not using matching version. Please recheck and use correct XML file."
+        Exit 2
+    }
+
     #Verify Computername is in XML file
     $ComputerName = $env:COMPUTERNAME
 
@@ -183,6 +191,16 @@ Process {
                     If ($NetworkRange.NetworkMetrix -eq 0) {
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
                     }
+                    if ($NetworkRange.NetBios -eq "True") {
+                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter.SetTcpipNetbios(1)
+                    }
+                    if ($NetworkRange.NetBios -eq "False") {
+                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter.SetTcpipNetbios(2)
+                    }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
                     }
@@ -203,6 +221,16 @@ Process {
                     }
                     If ($NetworkRange.NetworkMetrix -eq 0) {
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
+                    }
+                    if ($NetworkRange.NetBios -eq "True") {
+                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter.SetTcpipNetbios(1)
+                    }
+                    if ($NetworkRange.NetBios -eq "False") {
+                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter.SetTcpipNetbios(2)
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
