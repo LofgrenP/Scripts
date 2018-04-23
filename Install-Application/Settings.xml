@@ -1,0 +1,9 @@
+<xml>
+ <Application>
+  <Name>CCMSetup</Name>
+  <InstallerName>CCMSetup.exe</InstallerName>
+  <InstallerType>EXE</InstallerType>
+  <Argument>/S setupinf=</Argument>
+  <Argument>setup.inf</Argument>
+ </Application>
+</xml>
