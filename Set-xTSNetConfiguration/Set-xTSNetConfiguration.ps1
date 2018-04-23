@@ -55,6 +55,7 @@ SOFTWARE.
     1.5.1 - (2018-02-20) Added option to reenable dns registration and metric
     1.5.2 - (2018-04-16) Added option to enable/disable netbios
     1.5.3 - (2018-04-16) Added XML Version check
+    1.5.4 - (2018-04-23) Fixed netbios bug
 
 #>
 
@@ -192,13 +193,11 @@ Process {
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
                     }
                     if ($NetworkRange.NetBios -eq "True") {
-                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
-                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(1)
                     }
                     if ($NetworkRange.NetBios -eq "False") {
-                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
-                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(2)
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
@@ -223,13 +222,11 @@ Process {
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
                     }
                     if ($NetworkRange.NetBios -eq "True") {
-                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
-                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(1)
                     }
                     if ($NetworkRange.NetBios -eq "False") {
-                        $NetDescription = (Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex).ifDesc
-                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetDescription
+                        $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(2)
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
