@@ -26,10 +26,10 @@ SOFTWARE.
 <#
 .SYNOPSIS
 	Redistribute failed packages for specified DP
-	
+
 .DESCRIPTION
     The script will check specified DP for packages that has failed according to summarizer events and redist any failed packages.
-	
+
 .PARAMETER Sitecode
 	Enter SiteCode
 
@@ -38,14 +38,14 @@ SOFTWARE.
 
 .EXAMPLE
 	Update-ContentForSingleDP.ps1 -SiteCode PS1 -DPFQDN cmdp01.corp.viamonstra.com
-	
+
 .NOTES
     FileName:    Update-ContentForSingleDP.ps1
     Author:      Peter Löfgren
     Contact:     @LofgrenPeter
     Created:     2018-03-01
     Updated:     2018-03-01
-	
+
     Version history:
     1.0.0 - (2018-03-01) Script created
 
@@ -53,11 +53,11 @@ SOFTWARE.
 
 param (
     [Parameter(Mandatory=$true)]
-    [ValidateNotnullorEmpty]
+    [ValidateNotnullorEmpty()]
     $SiteCode,
 
     [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty]
+    [ValidateNotNullOrEmpty()]
     $DPFQDN
 
 )
@@ -69,4 +69,4 @@ foreach ($Failure in $Failures) {
     $DP = Get-WmiObject -Namespace root\sms\site_$SiteCode -Class sms_distributionpoint | Where-Object ServerNalPath -match $DPFQDN | Where-Object PackageID -EQ $PackageID
     $DP.RefreshNow = $true
     $DP.put()
-} 
+}
