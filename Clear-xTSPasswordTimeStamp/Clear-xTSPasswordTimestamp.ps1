@@ -1,6 +1,6 @@
 ﻿<#
 Created:     2018-06-12
-Version:     1.0
+Version:     1.1
 Author :     Peter Lofgren
 Twitter:     @LofgrenPeter
 Blog   :     http://syscenramblings.wordpress.com
@@ -14,6 +14,7 @@ Script has been modified to including logging. All credit for original script go
 
 Updates
 1.0 - Initial release
+1.1 - Stop Logging missing
 
 License:
 
@@ -142,3 +143,5 @@ Catch {
     Write-Output "$SCRIPTNAME - Failed to reset password in AD, exiting"
     Write-Output "$ScriptName - Do not forgett to manually reset AdmPwd expire time"
 }
+
+. Stop-Logging
