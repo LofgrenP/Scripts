@@ -1,6 +1,6 @@
 ﻿<#
 Created:     2018-01-23
-Version:     5.0
+Version:     5.1
 Author :     Peter Lofgren
 Twitter:     @LofgrenPeter
 Blog   :     http://syscenramblings.wordpress.com
@@ -15,6 +15,7 @@ Updates
 3.0 - Added support for .msp files
 4.0 - Added support for .vbs and .ps1 files
 5.0 - Fixed ConfigMgr Logging path.
+5.1 - Added extened errorhandling for exitcode
 #>
 
 
@@ -122,7 +123,28 @@ Function Start-Logging{
 Function Stop-Logging{
     Stop-Transcript
 }
+Function Get-TSxExitCode {
+    [CmdletBinding(SupportsShouldProcess=$true)]
 
+    param (
+        [parameter(mandatory=$true,position=0)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ExitCode,
+
+        [parameter(mandatory=$false,position=1)]
+        [ValidateNotNullOrEmpty()]
+        $ReturnCodes = $("0","3010")
+    )
+
+    If ($ReturnCodes -contains $ExitCode) {
+        Write-Output "Valid exitcode found, continuing"
+    }
+    Else {
+        Write-Output "Faulty exitcode found, exiting using exitcode"
+        Exit $ExitCode
+    }
+    
+}
 
 # Set Vars
 $SCRIPTDIR = split-path -parent $MyInvocation.MyCommand.Path
@@ -172,36 +194,42 @@ foreach ($App in $Settings.xml.Application) {
         Write-Output "Starting install $Name with: $SOURCEROOT\$InstallerName $InstallSwitches"
         $ExitCode = Invoke-Exe -Executable $SOURCEROOT\$InstallerName -Arguments $InstallSwitches
         Write-Output "Finsihed installing $Name with exitcode $ExitCode"
+        Get-TSxExitCode -ExitCode $ExitCode
     }
     Elseif ($InstallerType -like "MSI") {
         Write-Output "Starting install $Name with: msiexec /i $SOURCEROOT\$InstallerName $InstallSwitches"
         $Arg = "/i " + '"' + $SOURCEROOT + "\" + $InstallerName + '" ' + $InstallSwitches
         $ExitCode = Invoke-Exe -Executable msiexec -Arguments $Arg
         Write-Output "Finsihed installing $Name with exitcode $ExitCode"
+        Get-TSxExitCode -ExitCode $ExitCode
     }
     Elseif ($InstallerType -like "MSP") {
         Write-Output "Starting install $Name with: msiexec /p $SOURCEROOT\$InstallerName $InstallSwitches"
         $Arg = "/p " + '"' + $SOURCEROOT + "\" + $InstallerName + '" ' + $InstallSwitches
         $ExitCode = Invoke-Exe -Executable msiexec.exe -Arguments $Arg
         Write-Output "Finsihed installing $Name with exitcode $ExitCode"  
+        Get-TSxExitCode -ExitCode $ExitCode
     }
     Elseif ($InstallerType -like "VBS") {
         Write-Output "Starting install $Name with: cscript.exe $SOURCEROOT\$InstallerName $InstallSwitches"
         $Arg = '"' + $SOURCEROOT + "\" + $InstallerName + '" ' + $InstallSwitches
         $ExitCode = Invoke-Exe -Executable cscript.exe -Arguments $Arg
         Write-Output "Finsihed installing $Name with exitcode $ExitCode"  
+        Get-TSxExitCode -ExitCode $ExitCode
     }
     Elseif ($InstallerType -like "PS1") {
         Write-Output "Starting install $Name with: PowerShell.exe -ExecutionPolicy ByPass -File "$SOURCEROOT\$InstallerName""
         $Arg = '-ExecutionPolicy ByPass -File "' + $SOURCEROOT + "\" + $InstallerName + '" '
         $ExitCode = Invoke-Exe -Executable PowerShell.exe -Arguments $Arg
         Write-Output "Finsihed installing $Name with exitcode $ExitCode"  
+        Get-TSxExitCode -ExitCode $ExitCode
     }
     Elseif ($InstallerType -like "MSU") {
         Write-Output "Starting install $Name with: Wusa.exe " + '"' + $SOURCEROOT + '\' + $InstallerName + '" /quiet /Norestart'
         $Arg = '"' + $SOURCEROOT + "\" + $InstallerName + '" /quiet /norestart'
         $ExitCode = Invoke-Exe -Executable WUSA.exe -Arguments $Arg
         Write-Output "Finsihed installing $Name with exitcode $ExitCode"  
+        Get-TSxExitCode -ExitCode $ExitCode
     }
 }
 
