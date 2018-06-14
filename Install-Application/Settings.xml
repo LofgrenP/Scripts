@@ -3,7 +3,6 @@
   <Name>CCMSetup</Name>
   <InstallerName>CCMSetup.exe</InstallerName>
   <InstallerType>EXE</InstallerType>
-  <Argument>/S setupinf=</Argument>
-  <Argument>setup.inf</Argument>
+  <InstallSwitches>/MP:cm01.corp.viamonstra.com</InstallSwitches>
  </Application>
 </xml>
