@@ -12,6 +12,7 @@ is not supported by the author
 
 Updates
 1.0 - Initial release
+1.1 - Update for Importing ConfigMgr import module
 
 License:
 
@@ -44,10 +45,15 @@ param (
     $MDTRoot = "C:\MDTBuildLab"
 )
 try {
-    Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1) -ErrorAction Stop
+    #Import MDT module
     Import-Module "C:\Program Files\Microsoft Deployment Toolkit\bin\MicrosoftDeploymentToolkit.psd1" -ErrorAction Stop
     New-PSDrive -Name "DS001" -PSProvider MDTProvider -Root $MDTRoot -ErrorAction Stop
-    Set-Location "$((Get-PSDrive -PSProvider CMSite).Name):" -ErrorAction Stop
+
+    #Import ConfigMgr Module
+    $CMModule = $env:SMS_ADMIN_UI_PATH.Substring(0, $env:SMS_ADMIN_UI_PATH.Length - 5) + "\ConfigurationManager.psd1"
+    Import-Module $CMModule -ErrorAction Stop
+    $Drive = (Get-PSDrive -PSProvider CMSite -ErrorAction Stop).Name
+    Set-Location $($Drive + ":")
 }
 Catch {
     Write-Error "Failed stuff, troubleshoot please!"
