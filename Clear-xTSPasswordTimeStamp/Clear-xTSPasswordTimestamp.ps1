@@ -1,12 +1,12 @@
 ﻿<#
 Created:     2018-06-12
-Version:     1.1
+Version:     1.2
 Author :     Peter Lofgren
 Twitter:     @LofgrenPeter
 Blog   :     http://syscenramblings.wordpress.com
 
 Disclaimer:
-This script is provided "AS IS" with no warranties, confers no rights and 
+This script is provided "AS IS" with no warranties, confers no rights and
 is not supported by the author
 
 This script takes inspiration and basics from https://blogs.msdn.microsoft.com/laps/2015/05/06/laps-and-machine-reinstalls/
@@ -15,6 +15,7 @@ Script has been modified to including logging. All credit for original script go
 Updates
 1.0 - Initial release
 1.1 - Stop Logging missing
+1.2 - Correction of variable name typo
 
 License:
 
@@ -120,7 +121,7 @@ $Translator = New-Object -ComObject NameTranslate
 $Type = $Translator.GetType()
 $Type.InvokeMember(“Init”,”InvokeMethod”,$null,$Translator,(3,$null)) #resolve via GC
 $Type.InvokeMember(“Set”,”InvokeMethod”,$null,$Translator,(3,”$DomainName\$ComputerName`$”))
-$ComputerDN=$t.InvokeMember(“Get”,”InvokeMethod”,$null,$Translator,1)
+$ComputerDN=$Type.InvokeMember(“Get”,”InvokeMethod”,$null,$Translator,1)
 Write-Output "$Scriptname - ComputerDN: $ComputerDN"
 
 #connect to computer object
