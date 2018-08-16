@@ -56,6 +56,7 @@ SOFTWARE.
     1.5.2 - (2018-04-16) Added option to enable/disable netbios
     1.5.3 - (2018-04-16) Added XML Version check
     1.5.4 - (2018-04-23) Fixed netbios bug
+    1.5.5 - (2018-08-16) Added PowerSaver settings feature
 
 #>
 
@@ -140,7 +141,7 @@ Process {
     [xml]$XMLContent = Get-Content -Path $Path
 
     #Verfiy XML Version
-    if ($XMLContent.xml.version -ne "1.6") {
+    if ($XMLContent.xml.version -ne "1.7") {
         Write-Warning "XML not using matching version. Please recheck and use correct XML file."
         Exit 2
     }
@@ -206,6 +207,42 @@ Process {
                     if ( $NetworkRange.RegisterInDNS -eq "True") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
+                    if ( $NetworkRange.PowerSaver -eq "True") {
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
+                        If($ID -lt 10) {
+                            $AdapterDeviceNumber = "000"+$ID
+                        }
+                        Else {
+                            $AdapterDeviceNumber = "00"+$ID
+                        }
+                        Write-Output $AdapterDeviceNumber
+                        $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
+                        try { 
+                            Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -ErrorAction Stop
+                        }
+                        Catch {
+                            New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -PropertyType DWORD
+                        }
+                    }
+                    if ($NetworkRange.PowerSaver -eq "False"){
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
+                        If($ID -lt 10) {
+                            $AdapterDeviceNumber = "000"+$ID
+                        }
+                        Else {
+                            $AdapterDeviceNumber = "00"+$ID
+                        }
+                        Write-Output $AdapterDeviceNumber
+                        $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
+                        try { 
+                            Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -ErrorAction Stop
+                        }
+                        Catch {
+                            New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -PropertyType DWORD
+                        }
+                    }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
                 Else {
@@ -234,6 +271,42 @@ Process {
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "True") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
+                    }
+                    if ( $NetworkRange.PowerSaver -eq "True") {
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
+                        If($ID -lt 10) {
+                            $AdapterDeviceNumber = "000"+$ID
+                        }
+                        Else {
+                            $AdapterDeviceNumber = "00"+$ID
+                        }
+                        Write-Output $AdapterDeviceNumber
+                        $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
+                        try { 
+                            Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -ErrorAction Stop
+                        }
+                        Catch {
+                            New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -PropertyType DWORD
+                        }
+                    }
+                    if ($NetworkRange.PowerSaver -eq "False"){
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
+                        If($ID -lt 10) {
+                            $AdapterDeviceNumber = "000"+$ID
+                        }
+                        Else {
+                            $AdapterDeviceNumber = "00"+$ID
+                        }
+                        Write-Output $AdapterDeviceNumber
+                        $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
+                        try { 
+                            Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -ErrorAction Stop
+                        }
+                        Catch {
+                            New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -PropertyType DWORD
+                        }
                     }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
