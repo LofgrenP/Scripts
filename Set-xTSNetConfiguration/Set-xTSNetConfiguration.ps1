@@ -42,7 +42,7 @@ SOFTWARE.
     Author:      Peter Löfgren
     Contact:     @LofgrenPeter
     Created:     2017-12-28
-    Updated:     2018-04-16
+    Updated:     2018-08-16
 	
     Version history:
     1.0.0 - (2017-12-28) Script created
