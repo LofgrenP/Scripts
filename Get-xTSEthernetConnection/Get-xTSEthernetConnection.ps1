@@ -114,16 +114,27 @@ Write-Output "$ScriptName - Log: $LogFile"
 
 
 #Custom Code    
-
-$BatteryStatus = [BOOL](Get-WmiObject -Class BatteryStatus -Namespace root\wmi -ComputerName $env:COMPUTERNAME -ErrorAction SilentlyContinue).PowerOnLine 
-If ($BatteryStatus -eq "True") {
-    Write-Output "Computer is running on battery, will exit with exitcode 1"
+Write-Output "Getting network adapters"
+$Adapters = Get-NetAdapter -Physical | Where-Object -Property MediaType -EQ "802.3"
+If ($($Adapters | Measure-Object).Count -eq 0) {
+    Write-Output "No valid adapters found, exiting with exitcode 1"
     . Stop-Logging
-    #exit 1
+    Exit 1
 }
-else {
-    Write-Output "Computer is NOT running on battery, continuing"
+$Count = 0
+foreach ($Adapter in $Adapters) {
+    Write-Output "Checking adapter $($Adapter.InterfaceDescription)"
+    if ($Adapter.State -eq "Up") {
+        Write-Output "Found connected adapter, will continue"
+        $Count = 1
+    }
 }
+if ($Count -ne 1) {
+    Write-Output "No wired connection found, will exit with exitcode 2"
+    . Stop-Logging
+    exit 2
+}
+
 
 #Stop Logging
 . Stop-Logging
