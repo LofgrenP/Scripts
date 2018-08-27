@@ -38,12 +38,150 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 #>
 
-[CMDLETBINDING()]
+[CMDLETBINDING(SupportsShouldProcess=$true)]
 Param (
 
 )
 
+Function Import-SMSTSENV{
+    try {
+        $tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
+        Write-Output "$ScriptName - tsenv is $tsenv "
+        $MDTIntegration = "YES"
+    }
+    catch {
+        Write-Output "$ScriptName - Unable to load Microsoft.SMS.TSEnvironment"
+        Write-Output "$ScriptName - Running in standalonemode"
+        $MDTIntegration = "NO"
+    }
+    Finally {
+        if ($MDTIntegration -eq "YES") {
+            if ($tsenv.Value("LogPath") -ne "") {
+                $Logpath = $tsenv.Value("LogPath")
+                $LogFile = $Logpath + "\" + "$LogName.log"
+            }
+            Elseif ($tsenv.Value("_SMSTSLogPath") -ne "") {
+                $Logpath = $tsenv.Value("_SMSTSLogPath")
+                $LogFile = $Logpath + "\" + "$LogName.log"
+            }
+        }
+        elseif ($env:USERNAME = "System") {
+            try {
+                $LogPath = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\SMS\Client\Configuration\Client Properties' -Name 'Local SMS Path' -ErrorAction Stop)."Local SMS Path" + "Logs"
+                $LogFile = $Logpath + "\" + "$LogName.log"
+            }
+            Catch {
+                $Logpath = $env:TEMP
+                $LogFile = $Logpath + "\" + "$LogName.log"
+            }
+        }
+        Else{
+            $Logpath = $env:TEMP
+            $LogFile = $Logpath + "\" + "$LogName.log"
+        }
+    }
+}
+Function Invoke-Exe{
+    [CmdletBinding(SupportsShouldProcess=$true)]
+
+    param(
+        [parameter(mandatory=$true,position=0)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Executable,
+
+        [parameter(mandatory=$false,position=1)]
+        [string]
+        $Arguments
+    )
+
+    if($Arguments -eq "")
+    {
+        Write-Verbose "Running $ReturnFromEXE = Start-Process -FilePath $Executable -ArgumentList $Arguments -NoNewWindow -Wait -Passthru"
+        $ReturnFromEXE = Start-Process -FilePath $Executable -NoNewWindow -Wait -Passthru
+    }else{
+        Write-Verbose "Running $ReturnFromEXE = Start-Process -FilePath $Executable -ArgumentList $Arguments -NoNewWindow -Wait -Passthru"
+        $ReturnFromEXE = Start-Process -FilePath $Executable -ArgumentList $Arguments -NoNewWindow -Wait -Passthru
+    }
+    Write-Verbose "Returncode is $($ReturnFromEXE.ExitCode)"
+    Return $ReturnFromEXE.ExitCode
+}
+Function Start-Logging{
+    Start-transcript -path $LogFile -Force
+}
+Function Stop-Logging{
+    Stop-Transcript
+}
+Function Get-TSxExitCode {
+    [CmdletBinding(SupportsShouldProcess=$true)]
+
+    param (
+        [parameter(mandatory=$true,position=0)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ExitCode,
+
+        [parameter(mandatory=$false,position=1)]
+        [ValidateNotNullOrEmpty()]
+        $ReturnCodes = $("0","3010")
+    )
+
+    If ($ReturnCodes -contains $ExitCode) {
+        Write-Output "Valid exitcode found, continuing"
+    }
+    Else {
+        Write-Output "Faulty exitcode found, exiting using exitcode"
+        Exit $ExitCode
+    }
+    
+}
+Function Get-xTSDellExitCode {
+    [CmdletBinding(SupportsShouldProcess=$true)]
+
+    param (
+        [parameter(mandatory=$true,position=0)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ExitCode
+    )
+
+    if ($ExitCode -eq "0") {
+        Write-Output "Successfully configured bios setting"    
+    }
+    else {
+        Write-Output "Failed with exitcode: $ExitCode"
+    }
+}
+
+#Set general script information
+$SCRIPTDIR = split-path -parent $MyInvocation.MyCommand.Path
+$SCRIPTNAME = split-path -leaf $MyInvocation.MyCommand.Path
+$SOURCEROOT = "$SCRIPTDIR\Source"
+$ARCHITECTURE = $env:PROCESSOR_ARCHITECTURE
+$LogName = $SCRIPTNAME
+
+#Try to Import SMSTSEnv
+. Import-SMSTSENV
+
+#Start Transcript Logging
+. Start-Logging
+
+#Output base info
+Write-Output "$ScriptName - ScriptDir: $ScriptDir"
+Write-Output "$ScriptName - SourceRoot: $SOURCEROOT"
+Write-Output "$ScriptName - ScriptName: $ScriptName"
+Write-Output "$ScriptName - Architecture: $ARCHITECTURE"
+Write-Output "$ScriptName - Integration with MDT(LTI/ZTI): $MDTIntegration"
+Write-Output "$ScriptName - Log: $LogFile"
+
+#Get Manufacturer
 $Make = Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer
+#Normalize manufacturer name
+Switch ($Make) {
+    "Hewlett-Packard" { $Make = "HP"}
+    "Dell Inc." { $Make = "Dell" }
+    "VmWare Inc." { $make = "VmWare" }
+    Default { $Make = $Make }
+}
+
 Write-Output "Make is currently: $Make"
 Switch ($Make) {
     "HP" {
@@ -139,5 +277,162 @@ Switch ($Make) {
     "Lenovo" {
         $Model = Get-WmiObject -Class Win32_ComputersystemProduct | Select-Object -ExpandProperty Version
         Write-Output "Model is currently: $Model"
+        Switch ($Model) {
+            "ThinkPad W520" {
+                $Bios = Get-WmiObject -Namespace root\wmi -Class lenovo_BiosSetting
+                Write-Output "TPM State: $(($Bios | Where-Object CurrentSetting -like "SecurityChip*" | Select-Object -ExpandProperty CurrentSetting).Split(",")[1])"
+                $SetBios = Get-WmiObject -Namespace root\wmi -Class lenovo_SetBiosSetting
+                $SetResult = $SetBios.SetBiosSetting("SecurityChip,Active")
+                Write-Output "Setting SecurityChip: $($SetResult.return)"
+                $SaveResult = (Get-WmiObject -namespace root\wmi -Class Lenovo_SaveBiosSettings).SaveBiosSettings()
+                Write-Output "Saving settings: $($SaveResult.return)"
+            }
+            Default {
+                $Bios = Get-WmiObject -Namespace root\wmi -Class lenovo_BiosSetting
+                Write-Output "TPM State: $(($Bios | Where-Object CurrentSetting -like "SecurityChip*" | Select-Object -ExpandProperty CurrentSetting).Split(",")[1])"
+                $SetBios = Get-WmiObject -Namespace root\wmi -Class lenovo_SetBiosSetting
+                $SetResult = $SetBios.SetBiosSetting("SecurityChip,Enable")
+                Write-Output "Setting SecurityChip: $($SetResult.return)"
+                $SaveResult = (Get-WmiObject -namespace root\wmi -Class Lenovo_SaveBiosSettings).SaveBiosSettings()
+                Write-Output "Saving settings: $($SaveResult.return)"
+            }
+        }
+    }
+    "Dell" {
+        $Model = Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty Model
+        Write-Output "Model is currently: $Model"
+        switch ($Model) {
+            "Latitude E7440" {
+                Write-Output "Dell requires the CCTK for BIOS modifications, will install needed components"
+
+                #Installing HAPI components
+                $InstallerName = "HAPI\hapint64.exe"
+                $InstallSwitches = "-i -K CCTK -p " + '"' + "$SOURCEROOT\HAPI" + '"'
+                Write-Output "Starting install $InstallerName with: $SOURCEROOT\$InstallerName $InstallSwitches"
+                $ExitCode = Invoke-Exe -Executable $SOURCEROOT\$InstallerName -Arguments $InstallSwitches
+                Write-Output "Finsihed installing $InstallerName with exitcode $ExitCode"
+                Get-TSxExitCode -ExitCode $ExitCode
+
+                #Set Locations settings
+                $CurrentLocation = (Get-Location).Path
+                Set-Location $SOURCEROOT
+
+                #Get current settings
+                Write-Output ""
+                Write-Output "Current settings"
+                $tpm = .\cctk.exe --tpm
+                $tpmactivation = .\cctk.exe --tpmactivation
+                $tpmppiacpi =.\cctk.exe --tpmppiacpi
+                $tpmppidpo = .\cctk.exe --tpmppidpo
+                $tpmppipo = .\cctk.exe --tpmppipo
+                Write-Output "TPM State: $(($tpm).Split("=")[1])"
+                Write-Output "TPM Activation: $(($tpmactivation).Split("=")[1])"
+                Write-Output "TPM Physical Precense API: $(($tpmppiacpi).Split("=")[1])"
+                Write-Output "TPM Physical Precense deprovision: $(($tpmppidpo).Split("=")[1])"
+                Write-Output "TPM Phyiscal Precense provision: $(($tpmppipo).Split("=")[1])"
+        
+                #Setting BIOS settings
+                Write-Output "Configuring BIOS"
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--setuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpm=on --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmactivation=activate --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmppiacpi=enable --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmppidpo=enable --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmppipo=enable --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--setuppwd= --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+
+                #Verify settings
+                Write-Output ""
+                Write-Output "Verifying settings"
+                $tpm = .\cctk.exe --tpm
+                $tpmactivation = .\cctk.exe --tpmactivation
+                $tpmppiacpi =.\cctk.exe --tpmppiacpi
+                $tpmppidpo = .\cctk.exe --tpmppidpo
+                $tpmppipo = .\cctk.exe --tpmppipo
+                Write-Output "TPM State: $(($tpm).Split("=")[1])"
+                Write-Output "TPM Activation: $(($tpmactivation).Split("=")[1])"
+                Write-Output "TPM Physical Precense API: $(($tpmppiacpi).Split("=")[1])"
+                Write-Output "TPM Physical Precense deprovision: $(($tpmppidpo).Split("=")[1])"
+                Write-Output "TPM Phyiscal Precense provision: $(($tpmppipo).Split("=")[1])"
+                Set-Location $CurrentLocation
+            }
+            Default {
+                Write-Output "Running in default mode"
+                Write-Output "Dell requires the CCTK for BIOS modifications, will install needed components"
+
+                #Installing HAPI components
+                $InstallerName = "HAPI\hapint64.exe"
+                $InstallSwitches = "-i -K CCTK -p " + '"' + "$SOURCEROOT\HAPI" + '"'
+                Write-Output "Starting install $InstallerName with: $SOURCEROOT\$InstallerName $InstallSwitches"
+                $ExitCode = Invoke-Exe -Executable $SOURCEROOT\$InstallerName -Arguments $InstallSwitches
+                Write-Output "Finsihed installing $InstallerName with exitcode $ExitCode"
+                Get-TSxExitCode -ExitCode $ExitCode
+
+                #Set Locations settings
+                $CurrentLocation = (Get-Location).Path
+                Set-Location $SOURCEROOT
+
+                #Get current settings
+                Write-Output ""
+                Write-Output "Current settings"
+                $tpm = .\cctk.exe --tpm
+                $tpmactivation = .\cctk.exe --tpmactivation
+                $tpmppiacpi =.\cctk.exe --tpmppiacpi
+                $tpmppidpo = .\cctk.exe --tpmppidpo
+                $tpmppipo = .\cctk.exe --tpmppipo
+                Write-Output "TPM State: $(($tpm).Split("=")[1])"
+                Write-Output "TPM Activation: $(($tpmactivation).Split("=")[1])"
+                Write-Output "TPM Physical Precense API: $(($tpmppiacpi).Split("=")[1])"
+                Write-Output "TPM Physical Precense deprovision: $(($tpmppidpo).Split("=")[1])"
+                Write-Output "TPM Phyiscal Precense provision: $(($tpmppipo).Split("=")[1])"
+        
+                #Setting BIOS settings
+                Write-Output "Configuring BIOS"
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--setuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpm=on --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmactivation=activate --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmppiacpi=enable --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmppidpo=enable --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--tpmppipo=enable --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+                $ExitCode = Invoke-Exe $SOURCEROOT\cctk.exe -Arguments "--setuppwd= --valsetuppwd=Password01"
+                Get-xTSDellExitCode -ExitCode $ExitCode
+
+                #Verify settings
+                Write-Output ""
+                Write-Output "Verifying settings"
+                $tpm = .\cctk.exe --tpm
+                $tpmactivation = .\cctk.exe --tpmactivation
+                $tpmppiacpi =.\cctk.exe --tpmppiacpi
+                $tpmppidpo = .\cctk.exe --tpmppidpo
+                $tpmppipo = .\cctk.exe --tpmppipo
+                Write-Output "TPM State: $(($tpm).Split("=")[1])"
+                Write-Output "TPM Activation: $(($tpmactivation).Split("=")[1])"
+                Write-Output "TPM Physical Precense API: $(($tpmppiacpi).Split("=")[1])"
+                Write-Output "TPM Physical Precense deprovision: $(($tpmppidpo).Split("=")[1])"
+                Write-Output "TPM Phyiscal Precense provision: $(($tpmppipo).Split("=")[1])"
+                Set-Location $CurrentLocation
+            }
+        }
+    }
+    Default {
+        $Model = Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty Model
+        Write-Output "Model is currently: $Model"
+        Write-Output "This models does not have scripted support for BIOS settings."
     }
 }
+
+#Stop Transcript logging
+. Stop-Logging
