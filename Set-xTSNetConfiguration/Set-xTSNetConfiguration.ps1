@@ -42,7 +42,7 @@ SOFTWARE.
     Author:      Peter Löfgren
     Contact:     @LofgrenPeter
     Created:     2017-12-28
-    Updated:     2018-08-16
+    Updated:     2018-09-03
 	
     Version history:
     1.0.0 - (2017-12-28) Script created
@@ -57,6 +57,7 @@ SOFTWARE.
     1.5.3 - (2018-04-16) Added XML Version check
     1.5.4 - (2018-04-23) Fixed netbios bug
     1.5.5 - (2018-08-16) Added PowerSaver settings feature
+    1.5.6 - (2018-09-03) Fixed PowerSaver setting using wrong variable name
 
 #>
 
@@ -204,11 +205,11 @@ Process {
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
                     }
-                    if ( $NetworkRange.RegisterInDNS -eq "True") {
+                    if ($NetworkRange.RegisterInDNS -eq "True") {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
-                    if ( $NetworkRange.PowerSaver -eq "True") {
-                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                    if ($NetworkRange.PowerSaver -eq "True") {
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
                             $AdapterDeviceNumber = "000"+$ID
@@ -226,7 +227,7 @@ Process {
                         }
                     }
                     if ($NetworkRange.PowerSaver -eq "False"){
-                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
                             $AdapterDeviceNumber = "000"+$ID
@@ -273,7 +274,7 @@ Process {
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
                     if ( $NetworkRange.PowerSaver -eq "True") {
-                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
                             $AdapterDeviceNumber = "000"+$ID
@@ -291,7 +292,7 @@ Process {
                         }
                     }
                     if ($NetworkRange.PowerSaver -eq "False"){
-                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $Adapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
+                        $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
                             $AdapterDeviceNumber = "000"+$ID
