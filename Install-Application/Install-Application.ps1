@@ -1,6 +1,6 @@
 ﻿<#
 Created:     2018-01-23
-Version:     5.1
+Version:     5.2
 Author :     Peter Lofgren
 Twitter:     @LofgrenPeter
 Blog   :     http://syscenramblings.wordpress.com
@@ -16,6 +16,7 @@ Updates
 4.0 - Added support for .vbs and .ps1 files
 5.0 - Fixed ConfigMgr Logging path.
 5.1 - Added extened errorhandling for exitcode
+5.2 - Fixed bug with secondary files to installers.
 #>
 
 
@@ -177,13 +178,16 @@ Write-Output "$ScriptName - SourceRoot: $SOURCEROOT"
 Write-Output "$ScriptName - ScriptName: $ScriptName"
 Write-Output "$ScriptName - SettingsFile: $SettingsFile"
 Write-Output "$ScriptName - Current Culture: $LANG"
+Write-Output "$ScriptName - Architecture: $ARCHITECTURE"
 Write-Output "$ScriptName - Integration with MDT(LTI/ZTI): $MDTIntegration"
 Write-Output "$ScriptName - Log: $LogFile"
 
 #Actuall Install
-
+#Set current location to be resumed
+$CurrentLocation = Get-Location | Select-Object -ExpandProperty Path
 foreach ($App in $Settings.xml.Application) {
 
+    Set-Location -Path $SOURCEROOT
     $InstallerName = $App.InstallerName
     $InstallerType = $App.InstallerType
     $InstallSwitches = $App.InstallSwitches
@@ -232,6 +236,8 @@ foreach ($App in $Settings.xml.Application) {
         Get-TSxExitCode -ExitCode $ExitCode
     }
 }
+
+Set-Location -Path $CurrentLocation
 
 #Stop Logging
 . Stop-Logging
