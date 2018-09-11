@@ -1,4 +1,4 @@
-<xml version="1.7">
+<xml version="1.8">
 <networkrange>
 	<name>Primary</name>
 	<Subnet>172.22.1</Subnet>
@@ -10,7 +10,7 @@
     <RegisterInDNS>True</RegisterInDNS>
     <NetworkMetric>1</NetworkMetric>
 	<NetBios>True</NetBios>
-	<PowerSaver>True</PowerSaver>
+	<DisablePowerSaver>True</DisablePowerSaver>
 </networkrange>
 <networkrange>
 	<name>Secondary</name>
@@ -23,7 +23,7 @@
     <RegisterInDNS>True</RegisterInDNS>
     <NetworkMetric>2</NetworkMetric>
 	<NetBios>True</NetBios>
-	<PowerSaver>True</PowerSaver>
+	<DisablePowerSaver>True</DisablePowerSaver>
 </networkrange>
 <networkrange>
 	<name>Third</name>
@@ -36,7 +36,7 @@
     <RegisterInDNS>True</RegisterInDNS>
     <NetworkMetric>3</NetworkMetric>
 	<NetBios>True</NetBios>
-	<PowerSaver>True</PowerSaver>
+	<DisablePowerSaver>True</DisablePowerSaver>
 </networkrange>
 <Computer name="PC01" IP="1" />
 <Computer name="PC02" IP="2" />

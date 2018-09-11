@@ -42,7 +42,7 @@ SOFTWARE.
     Author:      Peter Löfgren
     Contact:     @LofgrenPeter
     Created:     2017-12-28
-    Updated:     2018-09-03
+    Updated:     2018-09-11
 	
     Version history:
     1.0.0 - (2017-12-28) Script created
@@ -58,6 +58,7 @@ SOFTWARE.
     1.5.4 - (2018-04-23) Fixed netbios bug
     1.5.5 - (2018-08-16) Added PowerSaver settings feature
     1.5.6 - (2018-09-03) Fixed PowerSaver setting using wrong variable name
+    1.5.7 - (2018-09-11) Added addtional logging for each step
 
 #>
 
@@ -186,29 +187,37 @@ Process {
                     New-NetIPAddress -IPAddress "$($NetworkRange.Subnet + "." + $LastIP)" -InterfaceIndex $NetAdapter.InterfaceIndex -PrefixLength $NetworkRange.Length | Out-Null
                     Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
                     if ($NetworkRange.DisableIPv6 -eq "True") {
+                        Write-Output "INFO: Disabling IPv6 binding"
                         Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
                     }
                     if ($NetworkRange.NetworkMetric -ne 0) {
+                        Write-Output "INFO: Setting Network metric to: $($NetWorkRange.NetworkMetric)"
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -InterfaceMetric $NetworkRange.NetworkMetric
                     }
                     If ($NetworkRange.NetworkMetrix -eq 0) {
+                        Write-Output "INFO: Setting Network metric to automatic"
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
                     }
                     if ($NetworkRange.NetBios -eq "True") {
+                        Write-Output "INFO: Enabling NetBios"
                         $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(1)
                     }
                     if ($NetworkRange.NetBios -eq "False") {
+                        Write-Output "INFO: Disabling NetBios"
                         $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(2)
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
+                        Write-Output "INFO: Disabling DNS registration"
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
                     }
                     if ($NetworkRange.RegisterInDNS -eq "True") {
+                        Write-Output "INFO: Enabling DNS registration"
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
-                    if ($NetworkRange.PowerSaver -eq "True") {
+                    if ($NetworkRange.DisablePowerSaver -eq "True") {
+                        Write-Output "INFO: Disabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
@@ -217,7 +226,7 @@ Process {
                         Else {
                             $AdapterDeviceNumber = "00"+$ID
                         }
-                        Write-Output $AdapterDeviceNumber
+                        Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
                         try { 
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -ErrorAction Stop
@@ -226,7 +235,8 @@ Process {
                             New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -PropertyType DWORD
                         }
                     }
-                    if ($NetworkRange.PowerSaver -eq "False"){
+                    if ($NetworkRange.DisablePowerSaver -eq "False") {
+                        Write-Output "INFO: Enabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
@@ -235,7 +245,7 @@ Process {
                         Else {
                             $AdapterDeviceNumber = "00"+$ID
                         }
-                        Write-Output $AdapterDeviceNumber
+                        Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
                         try { 
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -ErrorAction Stop
@@ -251,29 +261,37 @@ Process {
                     New-NetIPAddress -IPAddress "$($NetworkRange.Subnet + "." + $LastIP)" -DefaultGateway $NetworkRange.Gateway -InterfaceIndex $NetAdapter.InterfaceIndex -PrefixLength $NetworkRange.Length | Out-Null
                     Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
                     if ($NetworkRange.DisableIPv6 -eq "True") {
+                        Write-Output "INFO: Disabling IPv6 binding"
                         Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
                     }
                     if ($NetworkRange.NetworkMetric -ne 0) {
+                        Write-Output "INFO: Setting Network metric to: $($NetWorkRange.NetworkMetric)"
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -InterfaceMetric $NetworkRange.NetworkMetric
                     }
                     If ($NetworkRange.NetworkMetrix -eq 0) {
+                        Write-Output "INFO: Setting Network metric to automatic"
                         Set-NetIPInterface -InterfaceIndex $NetAdapter.InterfaceIndex -AutomaticMetric Enabled
                     }
                     if ($NetworkRange.NetBios -eq "True") {
+                        Write-Output "INFO: Enabling NetBios"
                         $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(1)
                     }
                     if ($NetworkRange.NetBios -eq "False") {
+                        Write-Output "INFO: Disabling NetBios"
                         $WmiAdapter = Get-WmiObject -Class "Win32_NetworkAdapterConfiguration" | Where-Object Description -eq $NetAdapter.InterfaceDescription
                         $WmiAdapter.SetTcpipNetbios(2)
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "False") {
+                        Write-Output "INFO: Disabling DNS registration"
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $false
                     }
                     if ( $NetworkRange.RegisterInDNS -eq "True") {
+                        Write-Output "INFO: Enabling DNS registration"
                         Get-NetAdapter -InterfaceIndex $NetAdapter.InterfaceIndex | Set-DnsClient -RegisterThisConnectionsAddress $true
                     }
-                    if ( $NetworkRange.PowerSaver -eq "True") {
+                    if ($NetworkRange.DisablePowerSaver -eq "True") {
+                        Write-Output "INFO: Disabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
@@ -282,7 +300,7 @@ Process {
                         Else {
                             $AdapterDeviceNumber = "00"+$ID
                         }
-                        Write-Output $AdapterDeviceNumber
+                        Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
                         try { 
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -ErrorAction Stop
@@ -291,7 +309,8 @@ Process {
                             New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -PropertyType DWORD
                         }
                     }
-                    if ($NetworkRange.PowerSaver -eq "False"){
+                    if ($NetworkRange.DisablePowerSaver -eq "False") {
+                        Write-Output "INFO: Enabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
                         If($ID -lt 10) {
@@ -300,7 +319,7 @@ Process {
                         Else {
                             $AdapterDeviceNumber = "00"+$ID
                         }
-                        Write-Output $AdapterDeviceNumber
+                        Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
                         try { 
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -ErrorAction Stop
@@ -308,7 +327,6 @@ Process {
                         Catch {
                             New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -PropertyType DWORD
                         }
-                    }
                     $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
                 }
             }
