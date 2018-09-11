@@ -143,7 +143,7 @@ Process {
     [xml]$XMLContent = Get-Content -Path $Path
 
     #Verfiy XML Version
-    if ($XMLContent.xml.version -ne "1.7") {
+    if ($XMLContent.xml.version -ne "1.8") {
         Write-Warning "XML not using matching version. Please recheck and use correct XML file."
         Exit 2
     }
