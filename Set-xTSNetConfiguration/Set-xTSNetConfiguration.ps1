@@ -27,23 +27,23 @@ SOFTWARE.
 <#
 .SYNOPSIS
 	Set networkadapter IPs based of XML file and name
-	
+
 .DESCRIPTION
     The script will determine static IP addresses to use based of computername and information in xml settings file.
-	
+
 .PARAMETER Path
 	Set a path to the xml file.
 
 .EXAMPLE
 	Set-xTSNetConfiguration.ps1 -Path .\NetConfiguration.xml
-	
+
 .NOTES
     FileName:    Set-xTSNetConfiguration.ps1
     Author:      Peter Löfgren
     Contact:     @LofgrenPeter
     Created:     2017-12-28
     Updated:     2018-09-11
-	
+
     Version history:
     1.0.0 - (2017-12-28) Script created
     1.0.1 - (2018-01-12) Bugfix for ipranges starting with same number.
@@ -168,7 +168,7 @@ Process {
             Write-Output "$SCRIPTNAME - Working on Adapter: $($NetAdapter.Name)"
             $IpAddress = $NetAdapter | Get-NetIPAddress -AddressFamily IPv4 | Select-Object -Unique
             #Match current network address with range in xmlfile
-        
+
             $SplitIP = $IpAddress.IPAddress.Split(".")
             $SplitIP = $SplitIP[0] + "." + $SplitIP[1] + "." + $SplitIP[2]
             If ($SplitIP -match "$($NetworkRange.Subnet)$") {
@@ -185,7 +185,7 @@ Process {
                 if ($NetworkRange.Gateway -eq "") {
                     Write-Output "$SCRIPTNAME - Seting IP without Default Gateway"
                     New-NetIPAddress -IPAddress "$($NetworkRange.Subnet + "." + $LastIP)" -InterfaceIndex $NetAdapter.InterfaceIndex -PrefixLength $NetworkRange.Length | Out-Null
-                    Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
+                    Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri, $NetworkRange.DNSSec
                     if ($NetworkRange.DisableIPv6 -eq "True") {
                         Write-Output "INFO: Disabling IPv6 binding"
                         Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
@@ -220,15 +220,15 @@ Process {
                         Write-Output "INFO: Disabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
-                        If($ID -lt 10) {
-                            $AdapterDeviceNumber = "000"+$ID
+                        If ($ID -lt 10) {
+                            $AdapterDeviceNumber = "000" + $ID
                         }
                         Else {
-                            $AdapterDeviceNumber = "00"+$ID
+                            $AdapterDeviceNumber = "00" + $ID
                         }
                         Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
-                        try { 
+                        try {
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -ErrorAction Stop
                         }
                         Catch {
@@ -239,15 +239,15 @@ Process {
                         Write-Output "INFO: Enabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
-                        If($ID -lt 10) {
-                            $AdapterDeviceNumber = "000"+$ID
+                        If ($ID -lt 10) {
+                            $AdapterDeviceNumber = "000" + $ID
                         }
                         Else {
-                            $AdapterDeviceNumber = "00"+$ID
+                            $AdapterDeviceNumber = "00" + $ID
                         }
                         Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
-                        try { 
+                        try {
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -ErrorAction Stop
                         }
                         Catch {
@@ -259,7 +259,7 @@ Process {
                 Else {
                     Write-Output "$SCRIPTNAME - Setting IP with Default Gateway"
                     New-NetIPAddress -IPAddress "$($NetworkRange.Subnet + "." + $LastIP)" -DefaultGateway $NetworkRange.Gateway -InterfaceIndex $NetAdapter.InterfaceIndex -PrefixLength $NetworkRange.Length | Out-Null
-                    Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri,$NetworkRange.DNSSec
+                    Set-DnsClientServerAddress -InterfaceIndex $NetAdapter.InterfaceIndex -ServerAddresses $NetworkRange.DNSPri, $NetworkRange.DNSSec
                     if ($NetworkRange.DisableIPv6 -eq "True") {
                         Write-Output "INFO: Disabling IPv6 binding"
                         Disable-NetAdapterBinding -InterfaceAlias $NetAdapter.InterfaceAlias –ComponentID ms_tcpip6
@@ -294,15 +294,15 @@ Process {
                         Write-Output "INFO: Disabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
-                        If($ID -lt 10) {
-                            $AdapterDeviceNumber = "000"+$ID
+                        If ($ID -lt 10) {
+                            $AdapterDeviceNumber = "000" + $ID
                         }
                         Else {
-                            $AdapterDeviceNumber = "00"+$ID
+                            $AdapterDeviceNumber = "00" + $ID
                         }
                         Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
-                        try { 
+                        try {
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 24 -ErrorAction Stop
                         }
                         Catch {
@@ -313,21 +313,22 @@ Process {
                         Write-Output "INFO: Enabling Windows PowerSaver on NetworkAdapter"
                         $PNPDeviceID = (Get-PnpDevice -FriendlyName $NetAdapter.InterfaceDescription) | Select-Object -ExpandProperty PNPDeviceID
                         [int]$ID = Get-WmiObject Win32_NetworkAdapter | Where-Object -Property PNPDeviceID -EQ $PNPDeviceID | Select-Object -ExpandProperty DeviceID
-                        If($ID -lt 10) {
-                            $AdapterDeviceNumber = "000"+$ID
+                        If ($ID -lt 10) {
+                            $AdapterDeviceNumber = "000" + $ID
                         }
                         Else {
-                            $AdapterDeviceNumber = "00"+$ID
+                            $AdapterDeviceNumber = "00" + $ID
                         }
                         Write-Output "INFO: Deviceadapternumber: $AdapterDeviceNumber"
                         $KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\$AdapterDeviceNumber"
-                        try { 
+                        try {
                             Set-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -ErrorAction Stop
                         }
                         Catch {
                             New-ItemProperty -Path $KeyPath -Name PnPCapabilities -Value 0 -PropertyType DWORD
                         }
-                    $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
+                        $NetAdapter | Rename-NetAdapter -NewName $NetworkRange.name -ErrorAction SilentlyContinue
+                    }
                 }
             }
             #Output simple no match data
@@ -336,7 +337,6 @@ Process {
             }
         }
     }
-
     #Stop Logging
     . Stop-Logging
 }
