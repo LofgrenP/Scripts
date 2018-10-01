@@ -301,6 +301,20 @@ Switch ($Make) {
     "Dell" {
         $Model = Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty Model
         Write-Output "Model is currently: $Model"
+        if ($clear) {
+            Write-Output "Quering Win32_TPM WMI object..."	
+            $oTPM = Get-WmiObject -Class "Win32_Tpm" -Namespace "ROOT\CIMV2\Security\MicrosoftTpm"
+             
+            Write-Output "Clearing TPM ownership....."
+            $tmp = $oTPM.SetPhysicalPresenceRequest(5)
+            If ($tmp.ReturnValue -eq 0) {
+                Write-Output "Successfully cleared the TPM chip. A reboot is required."
+                
+            } 
+            Else {
+                Write-Warning "Failed to clear TPM ownership. Exiting..."
+            }
+        }
         switch ($Model) {
             "Latitude E7440" {
                 Write-Output "Dell requires the CCTK for BIOS modifications, will install needed components"
