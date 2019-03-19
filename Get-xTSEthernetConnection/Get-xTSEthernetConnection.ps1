@@ -1,7 +1,7 @@
 <#
 Created:    2018-08-20
 Updated:    2018-08-20
-Version:    1.0
+Version:    1.1
 Author :    Peter Lofgren
 Twitter:    @LofgrenPeter
 Blog   :    http://syscenramblings.wordpress.com
@@ -12,6 +12,7 @@ is not supported by the author
 
 Updates
 1.0 - Initial release
+1.1 - Bugg fix (state vs status)
 
 License:
 
@@ -42,7 +43,7 @@ SOFTWARE.
 
 Param(
 
-) 
+)
 
 Function Import-SMSTSENV{
     try {
@@ -113,7 +114,7 @@ Write-Output "$ScriptName - Integration with MDT(LTI/ZTI): $MDTIntegration"
 Write-Output "$ScriptName - Log: $LogFile"
 
 
-#Custom Code    
+#Custom Code
 Write-Output "Getting network adapters"
 $Adapters = Get-NetAdapter -Physical | Where-Object -Property MediaType -EQ "802.3"
 If ($($Adapters | Measure-Object).Count -eq 0) {
@@ -124,7 +125,7 @@ If ($($Adapters | Measure-Object).Count -eq 0) {
 $Count = 0
 foreach ($Adapter in $Adapters) {
     Write-Output "Checking adapter $($Adapter.InterfaceDescription)"
-    if ($Adapter.State -eq "Up") {
+    if ($Adapter.Status -eq "Up") {
         Write-Output "Found connected adapter, will continue"
         $Count = 1
     }
