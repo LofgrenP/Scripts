@@ -12,6 +12,7 @@ is not supported by the author
 
 Updates
 1.0 - Initial release
+1.1 - Battery detection bugfix
 
 License:
 
@@ -42,9 +43,9 @@ SOFTWARE.
 
 Param(
 
-) 
+)
 
-Function Import-SMSTSENV{
+Function Import-SMSTSENV {
     try {
         $tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
         Write-Output "$ScriptName - tsenv is $tsenv "
@@ -76,17 +77,17 @@ Function Import-SMSTSENV{
                 $LogFile = $Logpath + "\" + "$LogName.log"
             }
         }
-        Else{
+        Else {
             $Logpath = $env:TEMP
             $LogFile = $Logpath + "\" + "$LogName.log"
         }
     }
 }
 
-Function Start-Logging{
+Function Start-Logging {
     start-transcript -path $LogFile -Force
 }
-Function Stop-Logging{
+Function Stop-Logging {
     Stop-Transcript
 }
 
@@ -113,10 +114,10 @@ Write-Output "$ScriptName - Integration with MDT(LTI/ZTI): $MDTIntegration"
 Write-Output "$ScriptName - Log: $LogFile"
 
 
-#Custom Code    
+#Custom Code
 
-$BatteryStatus = [BOOL](Get-WmiObject -Class BatteryStatus -Namespace root\wmi -ComputerName $env:COMPUTERNAME -ErrorAction SilentlyContinue).PowerOnLine 
-If ($BatteryStatus -eq "True") {
+$BatteryStatus = (Get-WmiObject -Class BatteryStatus -Namespace root\wmi -ComputerName $env:COMPUTERNAME -ErrorAction SilentlyContinue).PowerOnLine
+If ($BatteryStatus -eq $false) {
     Write-Output "Computer is running on battery, will exit with exitcode 1"
     . Stop-Logging
     exit 1
