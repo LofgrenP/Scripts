@@ -48,21 +48,22 @@ SOFTWARE.
 
     Version history:
     1.0.0 - (2018-03-01) Script created
+    1.1.0 - (2019-08-28) Updated for faster detection logic, thanks @jarwidmark
 
 #>
 
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateNotnullorEmpty()]
     $SiteCode,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     $DPFQDN
 
 )
 
-$Failures = Get-WmiObject -Namespace root\sms\site_$SiteCode -Class sms_packagestatusDistPointsSummarizer | Where-Object State -EQ 3 | Where-Object SourceNALPath -Match $DPFQDN
+$failures = Get-WmiObject -Namespace root\sms\site_$SiteCode -Query "select * from SMS_PackageStatusDistPointsSummarizer where State='1' and SourceNALPath like '%$DPFQDN%'"
 foreach ($Failure in $Failures) {
     $PackageID = $Failure.PackageID
     Write-Output "Failed PackageID: $PackageID"
