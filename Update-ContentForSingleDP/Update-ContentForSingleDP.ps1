@@ -49,7 +49,7 @@ SOFTWARE.
     Version history:
     1.0.0 - (2018-03-01) Script created
     1.1.0 - (2019-08-28) Updated for faster detection logic, thanks @jarwidmark
-
+    1.1.1 - (2019-09-16) Minor correction while looping
 #>
 
 param (
@@ -67,7 +67,7 @@ $failures = Get-WmiObject -Namespace root\sms\site_$SiteCode -Query "select * fr
 foreach ($Failure in $Failures) {
     $PackageID = $Failure.PackageID
     Write-Output "Failed PackageID: $PackageID"
-    $DP = Get-WmiObject -Namespace root\sms\site_$SiteCode -Class sms_distributionpoint | Where-Object ServerNalPath -match $DPFQDN | Where-Object PackageID -EQ $PackageID
+    $DP = Get-WmiObject -Namespace root\sms\site_$SiteCode -query "select * from sms_distributionpoint Where ServerNalPath like '%$DPFQDN%' and PackageID='$PackageID'"
     $DP.RefreshNow = $true
     $DP.put()
 }
