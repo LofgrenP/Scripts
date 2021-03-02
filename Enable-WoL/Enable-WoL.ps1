@@ -66,8 +66,6 @@ process {
     #Power Saver Plan DC Sleep Timeout
     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\238C9FA8-0AAD-41ED-83F4-97BE242C8F20\7bc4a2f9-d8fc-4469-b07b-33eb785aaca0\DefaultPowerSchemeValues\a1841308-3541-4fab-bc81-f71556f20b4a" -Name DcSettingIndex -Value 3600 -Force
 
-    
-
     #Configure Energy Efficient Ethernet
     $FindEEELinkAd = Get-ChildItem "hklm:\SYSTEM\ControlSet001\Control\Class" -Recurse -ErrorAction SilentlyContinue | ForEach-ObjectorEach-Object { Get-ItemProperty $_.pspath } -ErrorAction SilentlyContinue | Where-Objecthere-Object { $_.EEELinkAdvertisement } -ErrorAction SilentlyContinue
     If ($FindEEELinkAd.EEELinkAdvertisement -eq 1) {
